@@ -1,20 +1,42 @@
-import requests
 import pandas as pd
-import os
+import yfinance as yf
+from datetime import datetime, timedelta
+import pandas_ta as ta
 import sys
+import requests
+BOT_TOKEN = "8333571482:AAFyQZfJOTQpmPDsffSaPlEAbExOLnJB7Ms"
+CHAT_ID = "5343445157"
+def fetch_stock_data(ticker, period='1d', interval='1m'):
+    """
+    Fetch current stock data for a given ticker symbol.
 
-# --- CONFIGURATION ---
-SYMBOL = 'CL1'  # TwelveData uses this format for Crude Oil Spot
-INTERVAL = '1h'
-RSI_PERIOD = 14
+    
+    Parameters:
+    ticker (str): The stock ticker symbol.
+    period (str): The period over which to fetch data (default is '1mo').
+    interval (str): The data interval (default is '1d').
 
-# SECRETS
-BOT_TOKEN = os.environ.get("BOT_TOKEN")
-CHAT_ID = os.environ.get("CHAT_ID")
-API_KEY = os.environ.get("API_KEY") # <--- NEW SECRET
+    Returns:
+    pd.DataFrame: DataFrame containing the historical stock data.
+    """
 
-if not BOT_TOKEN or not CHAT_ID or not API_KEY:
-    print("Error: Missing environment variables (BOT_TOKEN, CHAT_ID, or TWELVE_DATA_API_KEY).")
+    stock = yf.Ticker(ticker)
+    hist = stock.history(period=period, interval=interval)
+    return hist
+def calculate_technical_indicators(df):
+    """ Calculate technical indicators for the stock data.  
+    Parameters:
+    df (pd.DataFrame): DataFrame containing stock data with 'Close' prices.
+    Returns:
+    pd.DataFrame: DataFrame with added technical indicators.
+    """
+    df['SMA_14'] = ta.sma(df['Close'], length=14)
+    df['EMA_14'] = ta.ema(df['Close'], length=14)
+    df['RSI_14'] = ta.rsi(df['Close'], length=14)
+    return df
+
+if not BOT_TOKEN or not CHAT_ID:
+    print("Error: Missing environment variables (BOT_TOKEN or CHAT_ID).")
     sys.exit(1)
 
 def send_telegram_message(message):
@@ -29,73 +51,21 @@ def send_telegram_message(message):
     except Exception as e:
         print(f"Failed to send message: {e}")
 
-def calculate_rsi(series, period=14):
-    """
-    Calculates RSI using Wilder's Smoothing Method (Standard for Trading).
-    """
-    delta = series.diff()
-    gain = delta.where(delta > 0, 0.0)
-    loss = -delta.where(delta < 0, 0.0)
-
-    avg_gain = gain.ewm(com=period-1, adjust=False).mean()
-    avg_loss = loss.ewm(com=period-1, adjust=False).mean()
-
-    rs = avg_gain / avg_loss
-    rsi = 100 - (100 / (1 + rs))
-    return rsi
-
-def get_twelvedata_price():
-    """
-    Fetches OHLC data directly from Twelve Data API using Requests.
-    """
-    base_url = "https://api.twelvedata.com/time_series"
-    params = {
-        "symbol": SYMBOL,
-        "interval": INTERVAL,
-        "apikey": API_KEY,
-        "outputsize": 50 # Fetch last 50 candles (enough for RSI)
-    }
-    
-    try:
-        response = requests.get(base_url, params=params)
-        data = response.json()
-
-        if "values" not in data:
-            print(f"Error fetching data: {data.get('message', 'Unknown error')}")
-            return None
-
-        # 1. Convert JSON list to DataFrame
-        df = pd.DataFrame(data['values'])
-        
-        # 2. Convert columns to numeric (API returns strings)
-        cols = ['open', 'high', 'low', 'close']
-        df[cols] = df[cols].apply(pd.to_numeric)
-        
-        # 3. Sort Oldest -> Newest (API returns Newest first, but we need Oldest first for math)
-        df = df.iloc[::-1].reset_index(drop=True)
-        
-        return df
-
-    except Exception as e:
-        print(f"API Request Failed: {e}")
-        return None
-
 def check_market():
-    print(f"Fetching data for {SYMBOL} from TwelveData...")
+    print(f"Fetching data for Crude Oil...")
     
-    df = get_twelvedata_price()
-    
+    df = fetch_stock_data('MCL=F', period='1d', interval='5m')
+    df = calculate_technical_indicators(df)
+    SYMBOL = 'MCL=F'
+    INTERVAL = '5m'
+    RSI_PERIOD = 14
     if df is None or df.empty:
         print("No data received.")
         return
 
-    # Calculate RSI
-    df['rsi'] = calculate_rsi(df['close'], period=RSI_PERIOD)
-
-    # Get last two completed candles
-    current_rsi = df['rsi'].iloc[-1]
-    prev_rsi = df['rsi'].iloc[-2]
-    current_price = df['close'].iloc[-1]
+    current_rsi = df['RSI_14'].iloc[-1]
+    prev_rsi = df['RSI_14'].iloc[-2]
+    current_price = df['Close'].iloc[-1]
 
     print(f"Analyzed {SYMBOL}: Prev RSI={prev_rsi:.2f}, Curr RSI={current_rsi:.2f}")
 
@@ -114,6 +84,5 @@ def check_market():
     else:
         print("No crossover detected.")
 
-if __name__ == "__main__":
-    check_market()
-
+ if __name__ == "__main__":
+     check_market()
