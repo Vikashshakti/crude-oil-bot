@@ -2,7 +2,6 @@ import pandas as pd
 import yfinance as yf
 from datetime import datetime, timedelta
 import pandas_ta as ta
-import sys
 import requests
 BOT_TOKEN = "8333571482:AAFyQZfJOTQpmPDsffSaPlEAbExOLnJB7Ms"
 CHAT_ID = "5343445157"
@@ -37,7 +36,7 @@ def calculate_technical_indicators(df):
 
 if not BOT_TOKEN or not CHAT_ID:
     print("Error: Missing environment variables (BOT_TOKEN or CHAT_ID).")
-    sys.exit(1)
+    
 
 def send_telegram_message(message):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
@@ -86,3 +85,4 @@ def check_market():
 
  if __name__ == "__main__":
      check_market()
+
