@@ -1,2 +1,5 @@
 pandas 
 requests
+yfinance
+sys
+pandas_ta
