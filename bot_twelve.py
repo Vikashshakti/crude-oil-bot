@@ -3,8 +3,8 @@ import yfinance as yf
 from datetime import datetime, timedelta
 import pandas_ta as ta
 import requests
-BOT_TOKEN = "8333571482:AAFyQZfJOTQpmPDsffSaPlEAbExOLnJB7Ms"
-CHAT_ID = "5343445157"
+BOT_TOKEN = "7809207412:AAF0FDgEce7PcNgTveduH1oWLExuYankMuc"
+CHAT_ID = "7994825155"
 def fetch_stock_data(ticker, period='1d', interval='1m'):
     """
     Fetch current stock data for a given ticker symbol.
@@ -86,6 +86,7 @@ def check_market():
 
 if __name__ == "__main__":
     check_market()
+
 
 
 
