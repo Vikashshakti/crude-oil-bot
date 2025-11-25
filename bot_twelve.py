@@ -81,9 +81,11 @@ def check_market():
         print("Sell Alert Sent")
     
     else:
+        send_telegram_message("No Crossover Detected!!")
         print("No crossover detected.")
 
 if __name__ == "__main__":
     check_market()
+
 
 
