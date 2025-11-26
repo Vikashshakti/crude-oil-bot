@@ -7,7 +7,7 @@ import requests
 
 
 # Telegram Bot Tokens
-BOT_TOKEN = "7809207412:AAF0FDgEce7PcNgTveduH1oWLExuYankMuc"
+BOT_TOKEN = "8350301832:AAFLj6xSI4caABwQEHOjbl2bxOEF6rPwlMY"
 CHAT_ID = "7994825155"
 
 # Fetching Function Stock data from yahoo finance
@@ -75,25 +75,26 @@ def check_market():
     current_price = df['Close'].iloc[-1] # Last row of Price 
 
     print(f"Analyzed {SYMBOL}: Prev RSI={prev_rsi:.2f}, Curr RSI={current_rsi:.2f}")
-
+    low_rsi= 30 
+    high_rsi = 80 
     # LOGIC 1: RSI Recovery (Crossing UP above 30)
-    if prev_rsi <= 30 and current_rsi > 30:
-        msg = f"🛢 **OIL ALERT (12Data): BUY**\n\n{SYMBOL} ({INTERVAL}) RSI crossed ABOVE.\n**RSI:** {current_rsi:.2f}\n**Price:** ${current_price:.2f}"
+    if prev_rsi <= low_rsi and current_rsi > low_rsi:
+        msg = f"🛢 **OIL ALERT (12Data): BUY**\n\n{SYMBOL} ({INTERVAL}) RSI crossed ABOVE {low_rsi}.\n**RSI:** {current_rsi:.2f}\n**Price:** ${current_price:.2f}"
         send_telegram_message(msg) # it will trigger this message to telegram 
         print("Buy Alert Sent")
 
     # LOGIC 2: RSI Cooldown (Crossing DOWN below 80)
-    elif prev_rsi >= 80 and current_rsi < 80:
-        msg = f"🔥 **OIL ALERT (12Data): SELL**\n\n{SYMBOL} ({INTERVAL}) RSI crossed BELOW.\n**RSI:** {current_rsi:.2f}\n**Price:** ${current_price:.2f}"
+    elif prev_rsi >= high_rsi and current_rsi < high_rsi:
+        msg = f"🔥 **OIL ALERT (12Data): SELL**\n\n{SYMBOL} ({INTERVAL}) RSI crossed BELOW {high_rsi}.\n**RSI:** {current_rsi:.2f}\n**Price:** ${current_price:.2f}"
         send_telegram_message(msg)
         print("Sell Alert Sent")
     
     else:
-        send_telegram_message("No Crossover Detected!!")
-        print("No crossover detected.")
-
+        message =f"Analyzed {SYMBOL}: Prev RSI={prev_rsi:.2f}, Curr RSI={current_rsi:.2f}"
+        send_telegram_message(message)
 if __name__ == "__main__":
     check_market()
+
 
 
 
